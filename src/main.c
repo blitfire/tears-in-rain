@@ -7,6 +7,9 @@
 #define BLOCK_SIZE 1024
 
 int main() {
+  /*
+   * mmap example
+   */
   void* memory_block;
 
   memory_block = mmap(NULL,
@@ -34,6 +37,28 @@ int main() {
     perror("munmap failed");
     return EXIT_FAILURE;
   }
+
+  printf("Content of the memory block at %p has been unmapped.\n", memory_block);
+
+  /*
+   * sbrk example
+  */
+
+  memory_block = sbrk(BLOCK_SIZE);
+  if (memory_block == (void *) -1) {
+    return EXIT_FAILURE;
+  }
+
+  printf("Allocated a %d-byte memory block at address: %p\n", BLOCK_SIZE, memory_block);
+
+  memset(memory_block, '\0', BLOCK_SIZE*sizeof(char));
+
+  payload = (char *)memory_block;
+  strcpy(payload, "The contents of my first sbrk block!");
+
+  printf("Content of the memory block: %s\n", payload);
+
+  sbrk(-BLOCK_SIZE);
 
   printf("Content of the memory block at %p has been unmapped.\n", memory_block);
 
