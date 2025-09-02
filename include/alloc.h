@@ -6,6 +6,7 @@
 // No need to store size: blocks are contiguous
 typedef struct header {
   struct header* next;
+  struct header* prev;
   unsigned char is_free;
   size_t size;
 } header_t;

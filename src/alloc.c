@@ -6,6 +6,7 @@
 void* my_malloc(const size_t size) {
   static header_t* head = NULL;
   static const size_t header_size = sizeof(header_t);
+  //TODO: Could keep track of the min/max block size available from previous searches to speed up allocation?
 
   // Initialise the head block
   if (head == NULL) {
@@ -14,6 +15,7 @@ void* my_malloc(const size_t size) {
     head = (header_t*) sbrk(page_size);
     head->is_free = 1;
     head->next = NULL;
+    head->prev = NULL;
     head->size = page_size - header_size;
   }
 
@@ -29,7 +31,10 @@ void* my_malloc(const size_t size) {
   if (target->size - size > header_size) {
     header_t* new_block = target + header_size + size;
     new_block->is_free = 1;
+
     new_block->next = target->next;
+    new_block->prev = target;
+
     target->next = new_block;
     
     new_block->size = target->size - size - header_size;
@@ -40,9 +45,13 @@ void* my_malloc(const size_t size) {
 }
 
 void my_free(void* block) {
-  header_t* header = block - sizeof(header_t);
-  header->is_free = 1;
+  header_t* target = block - sizeof(header_t);
+  target->is_free = 1;
 
-  // Should then coalesce
-  // But what if consecutive blocks are not contiguous?
+  while (target->prev != NULL && target->prev->is_free) target = target->prev;
+
+  while (target->next != NULL && target->next->is_free) {
+    target->size = target->next->size + sizeof(header_t);
+    target->next = target->next->next;
+  }
 }
